@@ -50,7 +50,8 @@ function SignalPanel({ sim, snap, onAction }: { sim: Simulation; snap: SimSnapsh
                 <button
                   className="mini-btn"
                   onClick={() => {
-                    sim.cancelRoute(r.routeId);
+                    const res = sim.cancelRoute(r.routeId);
+                    setError(res.ok ? null : res.reason ?? 'Refused');
                     onAction();
                   }}
                 >
