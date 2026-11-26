@@ -1,85 +1,46 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Simulation } from './engine/Simulation';
-import { buildAdamfield } from './maps/adamfield';
-import { TrackDiagram } from './ui/TrackDiagram';
-import { TopBar } from './ui/TopBar';
-import { SidePanel } from './ui/SidePanel';
-import { BottomPanel } from './ui/BottomPanel';
-import { computeTrainGeometry } from './ui/geometry';
+import { useState } from 'react';
+import { Menu } from './ui/Menu';
+import { loadSettings, saveSettings, type Settings } from './ui/settings';
+import { Workstation } from './ui/Workstation';
 
-const ADAMFIELD = buildAdamfield();
-
-function createSim() {
-  return new Simulation(ADAMFIELD.map, ADAMFIELD.timetable);
-}
+type Screen = 'menu' | 'workstation';
 
 export default function App() {
-  const [sim, setSim] = useState<Simulation>(() => createSim());
-  const [, setFrame] = useState(0);
+  const [screen, setScreen] = useState<Screen>('menu');
+  const [wsMode, setWsMode] = useState<'free' | 'tutorial'>('free');
+  const [settings, setSettings] = useState<Settings>(loadSettings);
 
-  useEffect(() => {
-    sim.start();
-    let raf = 0;
-    let last = performance.now();
-    const loop = (now: number) => {
-      const dt = Math.min(0.1, (now - last) / 1000);
-      last = now;
-      sim.tick(dt);
-      setFrame((f) => f + 1);
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, [sim]);
-
-  const snap = sim.getSnapshot();
-
-  const trainGeom = useMemo(() => {
-    const positions = sim.getTrainPositions().filter((t) => {
-      const ts = snap.trains.find((x) => x.uid === t.uid);
-      return ts && ts.state !== 'completed' && ts.state !== 'scheduled';
-    });
-    return computeTrainGeometry(ADAMFIELD.map, positions);
-  }, [sim, snap]);
-
-  const handleSelect = (kind: 'signal' | 'point' | 'train' | null, id: string | null) => {
-    sim.select(kind, id);
-    setFrame((f) => f + 1);
+  const updateSettings = (s: Settings) => {
+    setSettings(s);
+    saveSettings(s);
   };
 
-  const handleReset = () => {
-    setSim(createSim());
-  };
+  if (screen === 'menu') {
+    return (
+      <Menu
+        settings={settings}
+        onSettings={updateSettings}
+        onStartTutorial={() => {
+          setWsMode('tutorial');
+          setScreen('workstation');
+        }}
+        onFreePlay={() => {
+          setWsMode('free');
+          setScreen('workstation');
+        }}
+      />
+    );
+  }
 
   return (
-    <div className="app">
-      <TopBar
-        clock={snap.clock}
-        running={snap.running}
-        speed={snap.speed}
-        onToggle={() => {
-          sim.toggle();
-          setFrame((f) => f + 1);
-        }}
-        onSpeed={(s) => {
-          sim.setSpeed(s);
-          setFrame((f) => f + 1);
-        }}
-        onReset={handleReset}
-      />
-      <div className="main-area">
-        <div className="diagram-wrap">
-          <TrackDiagram map={ADAMFIELD.map} snap={snap} trainGeom={trainGeom} onSelect={handleSelect} />
-        </div>
-        <SidePanel
-          snap={snap}
-          timetable={ADAMFIELD.timetable}
-          sim={sim}
-          onSelectTrain={(uid) => handleSelect('train', String(uid))}
-          onAction={() => setFrame((f) => f + 1)}
-        />
-      </div>
-      <BottomPanel log={snap.log} />
-    </div>
+    <Workstation
+      mode={wsMode}
+      settings={settings}
+      onExit={() => setScreen('menu')}
+      onModeChange={(m) => {
+        setWsMode(m);
+        if (m === 'free') setScreen('workstation');
+      }}
+    />
   );
 }

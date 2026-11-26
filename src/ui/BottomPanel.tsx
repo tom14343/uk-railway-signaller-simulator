@@ -8,11 +8,11 @@ interface Props {
 export function BottomPanel({ log }: Props) {
   return (
     <footer className="bottom-panel">
-      <div className="messages-panel">
+      <div className="messages-panel" data-tut="messages-panel">
         <div className="panel-title">Operational messages</div>
         <div className="messages-empty">No operational messages</div>
       </div>
-      <div className="log-panel">
+      <div className="log-panel" data-tut="log-panel">
         <div className="panel-title">Event log</div>
         <div className="log-list">
           {[...log].reverse().map((e, i) => (

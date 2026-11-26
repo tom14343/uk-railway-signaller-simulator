@@ -52,17 +52,23 @@ indicators:
 
 ## Current features
 
+- Main menu with Start Tutorial, Free Play, Settings and About screens.
+- Guided seven-lesson tutorial that teaches signalling through highlighted,
+  interactive tasks on the real Adamfield workstation.
 - Fully data-driven map and engine; Adamfield is one map definition among a
   registry that future maps will join.
 - Working timetable of 20 trains (express and stopping services, both
   directions) with scheduled arrivals, departures and platform calls.
-- Simulation clock with pause/resume and speed selection (1×–16×).
+- Simulation clock with pause/resume and speed selection (1×–16×), starting
+  at 1×.
 - Interactive track diagram: signal aspects, point positions, occupied
   sections, train positions, station and boundary labels.
 - Route setting and cancellation with refusal reasons.
-- Timetable panel; clicking a service highlights the train on the diagram.
+- Collapsible timetable/selection drawer; clicking a service highlights the
+  train on the diagram.
 - Selection panel for signals, points and trains.
 - Event log of simulation activity.
+- Settings persisted to local storage (default speed, diagram labels).
 - A reserved "Operational messages" panel for a future incident-messaging
   system (currently empty by design).
 

@@ -36,7 +36,7 @@ export class Simulation {
 
   clock = CLOCK_START;
   running = false;
-  speed = 4;
+  speed = 1;
   private pointPositions = new Map<string, PointPos>();
   private activeRoutes = new Map<string, { touched: boolean }>();
   private occupied = new Map<string, number>();
@@ -528,6 +528,10 @@ export class Simulation {
 
   getTrainPositions(): { uid: number; pos: number; path: string[]; lengths: number[] }[] {
     return this.trains.map((t) => ({ uid: t.uid, pos: t.pos, path: t.path, lengths: t.pathLengths }));
+  }
+
+  getSchedule(headcode: string) {
+    return this.schedules.find((s) => s.headcode === headcode) ?? null;
   }
 
   getTrainDetail(uid: number) {

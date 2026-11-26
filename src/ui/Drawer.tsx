@@ -3,27 +3,33 @@ import type { PointPos, SimSnapshot, TrainSchedule } from '../engine/types';
 import type { Simulation } from '../engine/Simulation';
 import { fmtHM } from './format';
 
-function useActionError() {
-  const [error, setError] = useState<string | null>(null);
-  return { error, setError };
-}
+export type DrawerTab = 'trains' | 'selection';
 
 interface Props {
   snap: SimSnapshot;
   timetable: TrainSchedule[];
   sim: Simulation;
+  open: boolean;
+  tab: DrawerTab;
+  onToggle: () => void;
+  onTab: (t: DrawerTab) => void;
   onSelectTrain: (uid: number) => void;
   onAction: () => void;
 }
 
 const STATE_LABEL: Record<string, string> = {
-  scheduled: 'Scheduled',
-  approaching: 'Approaching',
-  'en-route': 'En route',
-  dwelling: 'Dwelling',
-  waiting: 'Waiting',
-  completed: 'Completed',
+  scheduled: 'Sched',
+  approaching: 'Appr',
+  'en-route': 'Moving',
+  dwelling: 'Stop',
+  waiting: 'Hold',
+  completed: 'Done',
 };
+
+function useActionError() {
+  const [error, setError] = useState<string | null>(null);
+  return { error, setError };
+}
 
 function SignalPanel({ sim, snap, onAction }: { sim: Simulation; snap: SimSnapshot; onAction: () => void }) {
   const sigId = snap.selected.id!;
@@ -44,7 +50,7 @@ function SignalPanel({ sim, snap, onAction }: { sim: Simulation; snap: SimSnapsh
         <div className="route-list">
           <div className="muted">Routes — select to set:</div>
           {routes.map((r) => (
-            <div key={r.routeId} className="route-row">
+            <div key={r.routeId} className="route-row" data-tut={`route-${r.routeId}`}>
               <span>{r.description}{r.set ? ' ✓' : ''}</span>
               {r.set ? (
                 <button
@@ -116,6 +122,7 @@ function TrainPanel({ sim, snap }: { sim: Simulation; snap: SimSnapshot }) {
   const uid = Number(snap.selected.id);
   const detail = sim.getTrainDetail(uid);
   if (!detail) return null;
+  const sch = sim.getSchedule(detail.headcode);
   return (
     <div className="selection-card">
       <h3>
@@ -124,6 +131,12 @@ function TrainPanel({ sim, snap }: { sim: Simulation; snap: SimSnapshot }) {
       <div className="kv"><span>Route</span><span>{detail.origin} → {detail.destination}</span></div>
       <div className="kv"><span>Line</span><span>{detail.line} ({detail.direction === 'up' ? 'Up' : 'Down'})</span></div>
       <div className="kv"><span>Status</span><span>{STATE_LABEL[detail.state] ?? detail.state} · {detail.speed.toFixed(0)} m/s</span></div>
+      {sch && (
+        <>
+          <div className="kv"><span>Entry</span><span>{sch.origin} {fmtHM(sch.entryTime)}</span></div>
+          <div className="kv"><span>Exit</span><span>{sch.destination}</span></div>
+        </>
+      )}
       <div className="stop-list">
         {detail.stops.map((s, i) => (
           <div key={i} className={`stop-row ${s.done ? 'stop-done' : ''}`}>
@@ -136,59 +149,62 @@ function TrainPanel({ sim, snap }: { sim: Simulation; snap: SimSnapshot }) {
   );
 }
 
-export function SidePanel({ snap, timetable, sim, onSelectTrain, onAction }: Props) {
-  const [tab, setTab] = useState<'timetable' | 'selection'>('timetable');
+export function Drawer({ snap, timetable, sim, open, tab, onToggle, onTab, onSelectTrain, onAction }: Props) {
   const uidByHeadcode = new Map(snap.trains.map((t) => [t.headcode, t.uid]));
 
+  if (!open) {
+    return (
+      <div className="drawer-rail">
+        <button className="rail-btn" onClick={onToggle} title="Open panels" data-tut="drawer-toggle">◂</button>
+        <button className="rail-btn" onClick={() => { onTab('trains'); onToggle(); }} title="Trains">TR</button>
+        <button className="rail-btn" onClick={() => { onTab('selection'); onToggle(); }} title="Selection">SL</button>
+      </div>
+    );
+  }
+
   return (
-    <aside className="side-panel">
-      <div className="side-tabs">
-        <button className={`side-tab ${tab === 'timetable' ? 'side-tab-active' : ''}`} onClick={() => setTab('timetable')}>
-          Timetable
-        </button>
-        <button className={`side-tab ${tab === 'selection' ? 'side-tab-active' : ''}`} onClick={() => setTab('selection')}>
-          Selection
-        </button>
+    <aside className="side-panel" data-tut="drawer">
+      <div className="drawer-head">
+        <div className="side-tabs">
+          <button className={`side-tab ${tab === 'trains' ? 'side-tab-active' : ''}`} onClick={() => onTab('trains')} data-tut="drawer-trains-tab">
+            Trains
+          </button>
+          <button className={`side-tab ${tab === 'selection' ? 'side-tab-active' : ''}`} onClick={() => onTab('selection')} data-tut="drawer-selection-tab">
+            Selection
+          </button>
+        </div>
+        <button className="drawer-close" onClick={onToggle} title="Close panels">▸</button>
       </div>
       <div className="side-body">
-        {tab === 'timetable' && (
-          <table className="timetable">
-            <thead>
-              <tr>
-                <th>Headcode</th>
-                <th>Service</th>
-                <th>Route</th>
-                <th>Calls</th>
-                <th>Line</th>
-                <th>In</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {timetable.map((sch) => {
-                const live = snap.trains.find((t) => t.headcode === sch.headcode);
-                const uid = uidByHeadcode.get(sch.headcode);
-                const selected = snap.selected.kind === 'train' && snap.selected.id === String(uid);
-                const stationName = (id: string) => sim.map.stations.find((s) => s.id === id)?.name ?? id;
-                const calls = sch.stops.map((s) => `${stationName(s.stationId)} ${fmtHM(s.arr)}/${fmtHM(s.dep)}`).join('  ·  ');
-                return (
-                  <tr
-                    key={sch.headcode}
-                    className={selected ? 'row-selected' : live?.late ? 'row-late' : ''}
-                    onClick={() => uid !== undefined && onSelectTrain(uid)}
-                  >
-                    <td className="td-headcode">{sch.headcode}</td>
-                    <td>{sch.description}</td>
-                    <td>{sch.origin} → {sch.destination}</td>
-                    <td className="td-calls">{calls}</td>
-                    <td>{sch.line} {sch.direction === 'up' ? '↑' : '↓'}</td>
-                    <td>{fmtHM(sch.entryTime)}</td>
-                    <td>{live ? STATE_LABEL[live.state] ?? live.state : 'Scheduled'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        {tab === 'trains' && (
+          <div className="train-list">
+            {timetable.map((sch) => {
+              const live = snap.trains.find((t) => t.headcode === sch.headcode);
+              const uid = uidByHeadcode.get(sch.headcode);
+              const selected = snap.selected.kind === 'train' && snap.selected.id === String(uid);
+              const stateKey = live?.state ?? 'scheduled';
+              return (
+                <div
+                  key={sch.headcode}
+                  className={`train-row ${selected ? 'row-selected' : ''} ${live?.late ? 'row-late' : ''}`}
+                  data-tut={`tt-${sch.headcode}`}
+                  onClick={() => {
+                    if (uid !== undefined) {
+                      onSelectTrain(uid);
+                      onTab('selection');
+                    }
+                  }}
+                >
+                  <span className="tr-headcode">{sch.headcode}</span>
+                  <span className="tr-desc">{sch.description.replace(' Passenger', '')}</span>
+                  <span className="tr-route">{sch.origin}→{sch.destination}</span>
+                  <span className="tr-line">{sch.line}{sch.direction === 'up' ? '↑' : '↓'}</span>
+                  <span className="tr-time">{fmtHM(sch.entryTime)}</span>
+                  <span className={`tr-state st-${stateKey}`}>{STATE_LABEL[stateKey] ?? stateKey}</span>
+                </div>
+              );
+            })}
+          </div>
         )}
         {tab === 'selection' && (
           <div className="selection-wrap">

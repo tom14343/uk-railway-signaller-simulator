@@ -9,6 +9,7 @@ interface Props {
   snap: SimSnapshot;
   trainGeom: Map<number, { x: number; y: number; angle: number }>;
   onSelect: (kind: 'signal' | 'point' | 'train' | null, id: string | null) => void;
+  showLabels?: boolean;
 }
 
 const ASPECT_COLORS: Record<Aspect, string> = {
@@ -40,7 +41,7 @@ function SignalHead({ x, y, aspect, selected }: { x: number; y: number; aspect: 
   );
 }
 
-export const TrackDiagram = memo(function TrackDiagram({ map, snap, trainGeom, onSelect }: Props) {
+export const TrackDiagram = memo(function TrackDiagram({ map, snap, trainGeom, onSelect, showLabels = true }: Props) {
   const nodeById = useMemo(() => new Map(map.nodes.map((n) => [n.id, n])), [map]);
 
   const sectionGeom = useMemo(() => {
@@ -59,6 +60,7 @@ export const TrackDiagram = memo(function TrackDiagram({ map, snap, trainGeom, o
       onClick={(e) => {
         if (e.target === e.currentTarget) onSelect(null, null);
       }}
+      data-tut="diagram"
     >
       <rect x={0} y={0} width={map.width} height={map.height + Y_OFFSET + 14} fill="transparent" />
       {map.boundaries.map((b) => (
@@ -76,7 +78,7 @@ export const TrackDiagram = memo(function TrackDiagram({ map, snap, trainGeom, o
         const minX = Math.min(...xs) - 3;
         const maxX = Math.max(...xs) + 3;
         return (
-          <g key={st.id}>
+          <g key={st.id} data-tut={`station-${st.id}`}>
             <rect x={minX} y={4} width={maxX - minX} height={map.height + Y_OFFSET - 8} fill="none" stroke="#22303f" strokeWidth={0.8} strokeDasharray="2 3" />
             <text x={st.x} y={Y_OFFSET - 12} textAnchor="middle" className="station-label">
               {st.name}
@@ -86,9 +88,14 @@ export const TrackDiagram = memo(function TrackDiagram({ map, snap, trainGeom, o
       })}
 
       {map.lines.map((line) => (
-        <text key={line.id} x={map.width - 6} y={line.y + Y_OFFSET - 8} textAnchor="end" className="line-label" fill={line.direction === 'up' ? '#7fb3d5' : '#d5a0a0'}>
-          {line.name}
-        </text>
+        <g key={line.id} data-tut={`line-${line.id}`}>
+          <text x={map.width - 6} y={line.y + Y_OFFSET - 8} textAnchor="end" className="line-label" fill={line.direction === 'up' ? '#7fb3d5' : '#d5a0a0'}>
+            {line.name}
+          </text>
+          <text x={30} y={line.y + Y_OFFSET + 2} textAnchor="middle" className="direction-arrow" fill={line.direction === 'up' ? '#4a6a85' : '#85524a'}>
+            {line.direction === 'up' ? '›' : '‹'}
+          </text>
+        </g>
       ))}
 
       {sectionGeom.map(({ sec, x1, y1, x2, y2 }) => {
@@ -98,6 +105,8 @@ export const TrackDiagram = memo(function TrackDiagram({ map, snap, trainGeom, o
         return (
           <line
             key={sec.id}
+            data-tut={`section-${sec.id}`}
+            data-occupied={occupied || undefined}
             x1={x1}
             y1={y1}
             x2={x2}
@@ -117,7 +126,7 @@ export const TrackDiagram = memo(function TrackDiagram({ map, snap, trainGeom, o
         const y = node.y + Y_OFFSET;
         const rev = pos === 'reverse';
         return (
-          <g key={p.id} transform={`translate(${p.x},${y})`} style={{ cursor: 'pointer' }} onClick={() => onSelect('point', p.id)}>
+          <g key={p.id} data-tut={`point-${p.id}`} transform={`translate(${p.x},${y})`} style={{ cursor: 'pointer' }} onClick={() => onSelect('point', p.id)}>
             {selected && <circle r={8} fill="none" stroke="#0a84ff" strokeWidth={1.4} />}
             <rect x={-5} y={-3.2} width={10} height={6.4} rx={1.2} fill={rev ? '#3a2b12' : '#14202c'} stroke={rev ? '#c98f2d' : '#4a5f75'} strokeWidth={0.8} />
             <line x1={-5} y1={0} x2={rev ? 5 : -5} y2={rev ? -3.2 : 0} stroke={rev ? '#e8b04b' : '#5d748c'} strokeWidth={1.4} />
@@ -134,12 +143,14 @@ export const TrackDiagram = memo(function TrackDiagram({ map, snap, trainGeom, o
         const y = sig.y + Y_OFFSET + (sig.side === -1 ? -15 : 15);
         const activeRoute = snap.routes.find((r) => r.signalId === sig.id);
         return (
-          <g key={sig.id} onClick={() => onSelect('signal', sig.id)} style={{ cursor: 'pointer' }}>
+          <g key={sig.id} data-tut={`signal-${sig.id}`} onClick={() => onSelect('signal', sig.id)} style={{ cursor: 'pointer' }}>
             <SignalHead x={sig.x} y={y} aspect={aspect} selected={selected} />
             {activeRoute && <circle cx={sig.x} cy={y + (sig.side === -1 ? 9 : -9)} r={1.8} fill="#0a84ff" />}
-            <text x={sig.x} y={y + (sig.side === -1 ? 13 : -11)} textAnchor="middle" className="signal-label">
-              {sig.label}
-            </text>
+            {showLabels && (
+              <text x={sig.x} y={y + (sig.side === -1 ? 13 : -11)} textAnchor="middle" className="signal-label">
+                {sig.label}
+              </text>
+            )}
           </g>
         );
       })}
@@ -151,7 +162,7 @@ export const TrackDiagram = memo(function TrackDiagram({ map, snap, trainGeom, o
         const w = TRAIN_LEN_UNITS;
         const h = 7;
         return (
-          <g key={uid} transform={`translate(${g.x},${g.y}) rotate(${g.angle})`} onClick={() => onSelect('train', String(uid))} style={{ cursor: 'pointer' }}>
+          <g key={uid} data-tut={`train-${ts.headcode}`} transform={`translate(${g.x},${g.y}) rotate(${g.angle})`} onClick={() => onSelect('train', String(uid))} style={{ cursor: 'pointer' }}>
             {selected && <rect x={-w / 2 - 2} y={-h / 2 - 2} width={w + 4} height={h + 4} rx={2} fill="none" stroke="#0a84ff" strokeWidth={1.4} />}
             <rect x={-w / 2} y={-h / 2} width={w} height={h} rx={1.6} fill={ts.late ? '#5a2b2b' : '#1d2b3a'} stroke={ts.late ? '#e5484d' : '#6d84a0'} strokeWidth={0.8} />
             <text x={0} y={1.6} textAnchor="middle" className="train-label">
