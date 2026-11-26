@@ -378,10 +378,12 @@ body {
 }
 
 .bottom-panel {
-  flex: 0 0 148px;
+  flex: none;
+  height: 148px;
   display: flex;
   border-top: 1px solid var(--border);
   background: var(--bg-panel);
+  overflow: hidden;
 }
 
 .messages-panel {
@@ -393,9 +395,12 @@ body {
 
 .log-panel {
   flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
   padding: 8px 12px;
-  overflow-y: auto;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .panel-title {
@@ -414,6 +419,9 @@ body {
 }
 
 .log-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 3px;
