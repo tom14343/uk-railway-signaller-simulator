@@ -8,6 +8,9 @@ This is an educational simulation based on British railway signalling principles
 It is not an operational signalling system and is not a substitute for railway
 training.
 
+**Open source:** released under the [MIT License](LICENSE). Contributions are
+welcome.
+
 > **Early development warning:** this project is very early in development and
 > may contain bugs, incomplete features and rough edges. Expect things to break
 > or behave unexpectedly, and please report problems via GitHub issues.
