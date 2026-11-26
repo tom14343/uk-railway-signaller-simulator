@@ -63,7 +63,9 @@ indicators:
   at 1×.
 - Interactive track diagram: signal aspects, point positions, occupied
   sections, train positions, station and boundary labels.
-- Route setting and cancellation with refusal reasons.
+- Route setting by clicking a signal then its destination signal, with
+  valid destinations highlighted; refusals are logged with reasons, and set
+  routes can be cancelled from the Selection panel.
 - Collapsible timetable/selection drawer; clicking a service highlights the
   train on the diagram.
 - Selection panel for signals, points and trains.

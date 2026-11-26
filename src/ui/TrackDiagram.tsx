@@ -10,6 +10,7 @@ interface Props {
   trainGeom: Map<number, { x: number; y: number; angle: number }>;
   onSelect: (kind: 'signal' | 'point' | 'train' | null, id: string | null) => void;
   showLabels?: boolean;
+  routeTargets?: ReadonlySet<string>;
 }
 
 const ASPECT_COLORS: Record<Aspect, string> = {
@@ -41,7 +42,7 @@ function SignalHead({ x, y, aspect, selected }: { x: number; y: number; aspect: 
   );
 }
 
-export const TrackDiagram = memo(function TrackDiagram({ map, snap, trainGeom, onSelect, showLabels = true }: Props) {
+export const TrackDiagram = memo(function TrackDiagram({ map, snap, trainGeom, onSelect, showLabels = true, routeTargets }: Props) {
   const nodeById = useMemo(() => new Map(map.nodes.map((n) => [n.id, n])), [map]);
 
   const sectionGeom = useMemo(() => {
@@ -142,8 +143,10 @@ export const TrackDiagram = memo(function TrackDiagram({ map, snap, trainGeom, o
         const selected = snap.selected.kind === 'signal' && snap.selected.id === sig.id;
         const y = sig.y + Y_OFFSET + (sig.side === -1 ? -15 : 15);
         const activeRoute = snap.routes.find((r) => r.signalId === sig.id);
+        const isTarget = routeTargets?.has(sig.id) ?? false;
         return (
           <g key={sig.id} data-tut={`signal-${sig.id}`} onClick={() => onSelect('signal', sig.id)} style={{ cursor: 'pointer' }}>
+            {isTarget && !selected && <circle cx={sig.x} cy={y} r={8} fill="none" stroke="#0a84ff" strokeWidth={1} strokeDasharray="2.5 2" opacity={0.8} />}
             <SignalHead x={sig.x} y={y} aspect={aspect} selected={selected} />
             {activeRoute && <circle cx={sig.x} cy={y + (sig.side === -1 ? 9 : -9)} r={1.8} fill="#0a84ff" />}
             {showLabels && (

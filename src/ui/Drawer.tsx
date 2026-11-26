@@ -48,35 +48,31 @@ function SignalPanel({ sim, snap, onAction }: { sim: Simulation; snap: SimSnapsh
       {routes.length === 0 && <div className="muted">Automatic signal — clears according to conditions ahead.</div>}
       {routes.length > 0 && (
         <div className="route-list">
-          <div className="muted">Routes — select to set:</div>
-          {routes.map((r) => (
-            <div key={r.routeId} className="route-row" data-tut={`route-${r.routeId}`}>
-              <span>{r.description}{r.set ? ' ✓' : ''}</span>
-              {r.set ? (
-                <button
-                  className="mini-btn"
-                  onClick={() => {
-                    const res = sim.cancelRoute(r.routeId);
-                    setError(res.ok ? null : res.reason ?? 'Refused');
-                    onAction();
-                  }}
-                >
-                  Cancel
-                </button>
-              ) : (
-                <button
-                  className="mini-btn"
-                  onClick={() => {
-                    const res = sim.requestRoute(sigId, r.routeId);
-                    setError(res.ok ? null : res.reason ?? 'Refused');
-                    onAction();
-                  }}
-                >
-                  Set
-                </button>
-              )}
-            </div>
-          ))}
+          <div className="muted">Click a highlighted destination signal on the diagram to set a route:</div>
+          {routes.map((r) => {
+            const dest = r.toSignalId ? sim.map.signals.find((s) => s.id === r.toSignalId) : null;
+            return (
+              <div key={r.routeId} className="route-row" data-tut={`route-${r.routeId}`}>
+                <span>
+                  {r.description}
+                  {dest ? ` → ${dest.label}` : ''}
+                  {r.set ? ' ✓' : ''}
+                </span>
+                {r.set && (
+                  <button
+                    className="mini-btn"
+                    onClick={() => {
+                      const res = sim.cancelRoute(r.routeId);
+                      setError(res.ok ? null : res.reason ?? 'Refused');
+                      onAction();
+                    }}
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            );
+          })}
           {active.length > 0 && <div className="muted">{active.length} route set — signal will clear when route is available.</div>}
           {error && <div className="action-error">{error}</div>}
         </div>

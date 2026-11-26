@@ -390,16 +390,20 @@ export class Simulation {
   }
 
   requestRoute(signalId: string, routeId: string): { ok: boolean; reason?: string } {
+    const refuse = (reason: string) => {
+      this.logMessage('warn', `Route refused: ${reason}`);
+      return { ok: false, reason };
+    };
     const sig = this.signalById.get(signalId);
     const route = this.routeById.get(routeId);
-    if (!sig || !route || route.signalId !== signalId) return { ok: false, reason: 'Unknown route' };
+    if (!sig || !route || route.signalId !== signalId) return refuse('Unknown route');
     const sigRoutes = this.routesBySignal.get(signalId) ?? [];
     if (sigRoutes.some((r) => this.activeRoutes.has(r.id))) {
-      return { ok: false, reason: 'A route is already set at this signal — cancel it first' };
+      return refuse('A route is already set at this signal — cancel it first');
     }
     for (const secId of route.sections) {
       if ((this.occupied.get(secId) ?? 0) > 0) {
-        return { ok: false, reason: `Section ${secId} is occupied` };
+        return refuse(`Section ${secId} is occupied`);
       }
     }
     for (const p of route.points) {
@@ -408,7 +412,7 @@ export class Simulation {
         const conflict = other.points.find((op) => op.pointId === p.pointId && op.pos !== p.pos);
         if (conflict) {
           const otherSig = this.signalById.get(other.signalId);
-          return { ok: false, reason: `Conflicts with route at ${otherSig?.label ?? other.signalId}` };
+          return refuse(`Conflicts with route at ${otherSig?.label ?? other.signalId}`);
         }
       }
     }
@@ -419,7 +423,7 @@ export class Simulation {
         const sec = this.sectionById.get(secId);
         if (sec?.kind === 'diagonal' && myDiags.has(sec.crossover) && !route.sections.includes(secId)) {
           const otherSig = this.signalById.get(other.signalId);
-          return { ok: false, reason: `Conflicts with opposing movement at ${otherSig?.label ?? other.signalId}` };
+          return refuse(`Conflicts with opposing movement at ${otherSig?.label ?? other.signalId}`);
         }
       }
     }

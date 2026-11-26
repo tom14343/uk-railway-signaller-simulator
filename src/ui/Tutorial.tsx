@@ -185,20 +185,20 @@ const LESSONS: Lesson[] = [
         done: (ctx) => ctx.snap.selected.kind === 'signal' && ctx.snap.selected.id === 'SIG.UF.S1E',
       },
       {
-        title: 'Choose a route',
+        title: 'Choose a destination signal',
         body: [
-          'Two routes are available: "Proceed" keeps the train on Up Fast; "Diverge via US" would send it onto Up Slow. For 1A01, choose Proceed.',
-          'Press Set on the Proceed route.',
+          'Two routes are available from UF-S1E: "Proceed" continues on Up Fast to signal UF-M1; "Diverge via US" would send the train onto Up Slow towards US-M1. For 1A01, choose Proceed.',
+          'The valid destination signals are highlighted with a dashed circle on the diagram. Click signal UF-M1 to set the route.',
         ],
-        target: ['route-RT.SIG.UF.S1E.1', 'drawer'],
-        task: 'Set the Proceed route at UF-S1E',
+        target: ['signal-SIG.UF.M1', 'drawer'],
+        task: 'Click destination signal UF-M1',
         done: (ctx) => ctx.snap.routes.some((r) => r.signalId === 'SIG.UF.S1E'),
       },
       {
         title: 'Route set',
         body: [
           'The route is now set: the points are locked in position and the signal can clear. Watch UF-S1E — it will show a proceed aspect once the route ahead is clear.',
-          'If a route is refused, the reason is shown — usually an occupied section or a conflicting route. Cancel a set route with its Cancel button when needed.',
+          'If a route is refused, the reason is shown in the event log — usually an occupied section or a conflicting route. Cancel a set route with its Cancel button in the Selection panel when needed.',
         ],
         target: ['signal-SIG.UF.S1E', 'route-RT.SIG.UF.S1E.1'],
       },
@@ -260,7 +260,7 @@ const LESSONS: Lesson[] = [
       {
         title: 'Signal the train through Adamfield',
         body: [
-          'Train 1A01 is approaching or dwelling at Adamfield. Its departure signal is UF-S2E. Set a route at UF-S2E so it can depart.',
+          'Train 1A01 is approaching or dwelling at Adamfield. Its departure signal is UF-S2E. Select UF-S2E, then click a highlighted destination signal to set a route so it can depart.',
           'You can set the route now or when the train is alongside — either way it must be set before the signal can clear.',
         ],
         target: ['signal-SIG.UF.S2E', 'drawer-selection-tab'],

@@ -49,6 +49,19 @@ export function Workstation({ mode, settings, onExit, onModeChange }: Props) {
 
   const snap = sim.getSnapshot();
 
+  const routeTargets = useMemo(() => {
+    const targets = new Set<string>();
+    if (snap.selected.kind === 'signal' && snap.selected.id) {
+      const setIds = new Set(snap.routes.map((r) => r.routeId));
+      for (const r of ADAMFIELD.map.routes) {
+        if (r.signalId === snap.selected.id && r.toSignalId && !setIds.has(r.id)) {
+          targets.add(r.toSignalId);
+        }
+      }
+    }
+    return targets;
+  }, [snap]);
+
   const trainGeom = useMemo(() => {
     const positions = sim.getTrainPositions().filter((t) => {
       const ts = snap.trains.find((x) => x.uid === t.uid);
@@ -58,6 +71,20 @@ export function Workstation({ mode, settings, onExit, onModeChange }: Props) {
   }, [sim, snap]);
 
   const handleSelect = (kind: 'signal' | 'point' | 'train' | null, id: string | null) => {
+    if (kind === 'signal' && id) {
+      const sel = snap.selected;
+      if (sel.kind === 'signal' && sel.id && sel.id !== id) {
+        const setIds = new Set(snap.routes.map((r) => r.routeId));
+        const route = ADAMFIELD.map.routes.find(
+          (r) => r.signalId === sel.id && r.toSignalId === id && !setIds.has(r.id),
+        );
+        if (route) {
+          sim.requestRoute(sel.id, route.id);
+          setFrame((f) => f + 1);
+          return;
+        }
+      }
+    }
     sim.select(kind, id);
     if (kind === 'signal' || kind === 'point') {
       setDrawerTab('selection');
@@ -96,6 +123,7 @@ export function Workstation({ mode, settings, onExit, onModeChange }: Props) {
             trainGeom={trainGeom}
             onSelect={handleSelect}
             showLabels={settings.showLabels}
+            routeTargets={routeTargets}
           />
         </div>
         <Drawer
