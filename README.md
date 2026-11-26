@@ -1,4 +1,4 @@
-# Adamfield — UK Railway Signaller Simulator
+# UK Railway Signaller Simulator: Adamfield
 
 A browser-based UK railway signalling simulator. You take the role of a signaller
 controlling the Adamfield signalling area: setting routes, operating points,
@@ -7,6 +7,10 @@ monitoring signal aspects and keeping trains moving safely.
 This is an educational simulation based on British railway signalling principles.
 It is not an operational signalling system and is not a substitute for railway
 training.
+
+> **Early development warning:** this project is very early in development and
+> may contain bugs, incomplete features and rough edges. Expect things to break
+> or behave unexpectedly, and please report problems via GitHub issues.
 
 ## What is Adamfield?
 
@@ -29,14 +33,14 @@ The simulator models real UK signalling behaviour rather than decorative
 indicators:
 
 - **Four-aspect colour-light signalling**: red, single yellow, double yellow and
-  green, with the standard meaning — red is danger, single yellow means the next
+  green, with the standard meaning: red is danger, single yellow means the next
   signal is at red, double yellow means the next signal is at single yellow, and
   green means proceed.
 - **Block sections and track occupancy**: every section of line is a track
   circuit analogue; a signal cannot clear into an unsafe aspect while the block
   ahead is occupied.
 - **Signal progression**: aspects are computed from the actual state of the
-  railway — occupancy and the aspect of the signal ahead — producing the
+  railway (occupancy and the aspect of the signal ahead), producing the
   characteristic green → double yellow → single yellow → red cascade behind a
   train.
 - **Route setting**: junction signals require a route to be set before they can
@@ -59,7 +63,7 @@ indicators:
   registry that future maps will join.
 - Working timetable of 20 trains (express and stopping services, both
   directions) with scheduled arrivals, departures and platform calls.
-- Simulation clock with pause/resume and speed selection (1×–16×), starting
+- Simulation clock with pause/resume and speed selection (1× to 16×), starting
   at 1×.
 - Interactive track diagram: signal aspects, point positions, occupied
   sections, train positions, station and boundary labels.
@@ -76,8 +80,8 @@ indicators:
 
 ## Technology stack
 
-- **React 19** + **TypeScript** — UI.
-- **Vite 8** — build tool and dev server.
+- **React 19** + **TypeScript** for the UI.
+- **Vite 8** as the build tool and dev server.
 - No other runtime dependencies; the signalling engine is hand-written
   TypeScript in `src/engine/`.
 
@@ -91,7 +95,7 @@ Each simulation step the engine:
 
 1. Spawns trains whose scheduled entry time has arrived at a boundary.
 2. Updates track-circuit occupancy from train positions.
-3. Moves trains under kinematic control — they brake for red signals and
+3. Moves trains under kinematic control. They brake for red signals and
    scheduled station stops and can never violate a danger aspect.
 4. Releases routes once their sections have cleared after a movement.
 5. Recomputes every signal aspect from occupancy and the aspect ahead.
@@ -154,11 +158,15 @@ src/
   maps/
     adamfield.ts      Adamfield map definition + timetable
   ui/
-    App.tsx           Application shell and simulation loop
+    App.tsx           Application shell and screen routing
+    Workstation.tsx   Signalling workstation layout and simulation loop
+    Menu.tsx          Main menu, settings and about screens
+    Tutorial.tsx      Guided seven-lesson tutorial
     TrackDiagram.tsx  SVG signalling diagram
     TopBar.tsx        Clock, status, speed and pause controls
-    SidePanel.tsx     Timetable and selection panels
+    Drawer.tsx        Timetable and selection panels
     BottomPanel.tsx   Operational messages (reserved) and event log
+    settings.ts       Persisted user settings
     geometry.ts       Train position → diagram coordinate mapping
     format.ts         Time formatting helpers
 ```
@@ -170,7 +178,7 @@ src/
    generator approach in `adamfield.ts`.
 2. Register it in a map registry (e.g. extend `src/maps/index.ts`) and let the
    UI select the active area.
-3. The engine, diagram and panels require no changes — they are driven entirely
+3. The engine, diagram and panels require no changes; they are driven entirely
    by the map data.
 
 ## Testing
@@ -193,18 +201,18 @@ signalling semantics described above. Open an issue or pull request on GitHub.
 
 ## Licence
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
 
 ## References
 
 Signalling principles implemented with reference to:
 
-- **RSSB Rule Book** — train working and signalling rules.
-- **Network Rail signalling principles** — four-aspect colour-light signalling,
+- **RSSB Rule Book**: train working and signalling rules.
+- **Network Rail signalling principles**: four-aspect colour-light signalling,
   block sections and route setting.
-- **SimSig Wiki** (simsig.co.uk) — community documentation of UK signal aspects
+- **SimSig Wiki** (simsig.co.uk): community documentation of UK signal aspects
   and interlocking behaviour.
-- **Wikipedia: UK railway signalling** — overview of aspect meanings and
+- **Wikipedia: UK railway signalling**: overview of aspect meanings and
   signalling practice.
 
 This project is an educational simulation and is not affiliated with Network
