@@ -156,6 +156,7 @@ body {
   display: flex;
   flex: 1 1 auto;
   min-height: 0;
+  position: relative;
 }
 
 .diagram-wrap {
@@ -166,7 +167,7 @@ body {
   justify-content: center;
   background:
     radial-gradient(ellipse at 50% 40%, #101823 0%, #0b0f15 75%);
-  padding: 10px;
+  padding: 10px 44px 10px 10px;
 }
 
 .track-diagram {
@@ -175,12 +176,17 @@ body {
 }
 
 .side-panel {
-  flex: 0 0 340px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 340px;
   display: flex;
   flex-direction: column;
   background: var(--bg-panel);
   border-left: 1px solid var(--border);
-  min-height: 0;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.45);
+  z-index: 20;
 }
 
 .side-tabs {
@@ -622,7 +628,11 @@ body {
 }
 
 .drawer-rail {
-  flex: 0 0 34px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 34px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -630,6 +640,7 @@ body {
   padding-top: 8px;
   background: var(--bg-panel);
   border-left: 1px solid var(--border);
+  z-index: 20;
 }
 
 .rail-btn {
