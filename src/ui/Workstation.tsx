@@ -25,7 +25,7 @@ interface Props {
 export function Workstation({ mode, settings, onExit, onModeChange }: Props) {
   const [sim, setSim] = useState<Simulation>(() => createSim());
   const [session, setSession] = useState(0);
-  const [drawerOpen, setDrawerOpen] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerTab, setDrawerTab] = useState<DrawerTab>('trains');
   const [, setFrame] = useState(0);
 

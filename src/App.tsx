@@ -6,8 +6,9 @@ import { Workstation } from './ui/Workstation';
 type Screen = 'menu' | 'workstation';
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>('menu');
-  const [wsMode, setWsMode] = useState<'free' | 'tutorial'>('free');
+  const playParam = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('play');
+  const [screen, setScreen] = useState<Screen>(playParam ? 'workstation' : 'menu');
+  const [wsMode, setWsMode] = useState<'free' | 'tutorial'>(playParam ? 'free' : 'free');
   const [settings, setSettings] = useState<Settings>(loadSettings);
 
   const updateSettings = (s: Settings) => {
